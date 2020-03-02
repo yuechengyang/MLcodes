@@ -100,29 +100,7 @@ def remove_high_relevance(train,featuresList,method='pearson',threshold=0.9):
                             print('remove',i)  
     return list(removeSet)
 
-@timefunc
-def get_dummies(data,featuresList=None,convertList_str=None,n=10):
-    import numpy as np
-    if convertList_str:
-        convertList = convertList_str.split(',')
-    else:
-        convertList = [c for c in featuresList if ('int' not in str(data[c].dtypes) and 'float' not in str(data[c].dtypes))]
-    for o in convertList:
-        print(o)
-        if data[o].nunique()<=n:
-            pass
-        else:
-            convert_values = list(data.groupby(o).size().sort_values(ascending=False).index[:n-1])
-            data[o] = data.apply(lambda l:l[o] if l[o] in convert_values else np.nan,axis=1)
-        data_tmp = pd.get_dummies(data[o])
-        data_tmp.columns = [o+'_'+str(c) for c in data_tmp.columns]  
-        print('add columns:',data_tmp.columns)
-        data = data.merge(data_tmp,left_index=True,right_index=True) 
-    print('------------------------------------conclusion----------------------------------')
-    print(convertList,'have been converted to dummies')
-    return data,convertList
 
-@timefunc
 @timefunc
 def get_features_attr(data,idList_str=None,targetList_str=None,featuresList=None,missing_warn=0.99,remove={'list':None,'missing':False,'single':False},output_path_pre=None):
     import pickle
@@ -313,34 +291,3 @@ def display_x_y(data,features_list,target_str,output_path_pre,target_type='categ
                     sns.boxplot(x=i, y=target, data=pd.concat([data[target], data[i]], axis=1),showfliers=False)
                     pdf.savefig(fig) 
             print('tables have been saved at',output_path_pre+'object_plot.pdf')        
-            
-         
-            
-        
-def fill_na_data(data,features_list,fillna={'fillna_assign_str':None,'fillna_default_str':None}):
-    import pandas as pd
-    import pickle
-    if isinstance(features_list,str):
-        with open(features_list, 'rb') as f:
-            featuresList = pickle.load(f)  
-    else:
-        featuresList = features_list
-    
-    # fillna
-    if fillna['fillna_assign_str'] or fillna['fillna_default_str']:
-        print('-----------------begin-fillna--------------')   
-        if fillna['fillna_assign_str']:
-            for f in fillna['fillna_assign_str'].split(','):
-                column = f.split(':')[0]
-                value = f.split(':')[1]
-                dtype = data[column].dtypes
-                if dtype=='int':
-                    data[column] = data[column].fillna(int(value))
-                elif dtype=='float':
-                    data[column] = data[column].fillna(float(value))
-                else:
-                    data[column] = data[column].fillna(value)
-        if fillna['fillna_default_str']:
-            data = data.fillna(int(fillna['fillna_default_str']))   
- 
-    return data   
